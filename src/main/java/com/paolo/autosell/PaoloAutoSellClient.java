@@ -76,7 +76,7 @@ public class PaoloAutoSellClient implements ClientModInitializer {
         if (!enabled) return;
         if (client.player == null || client.world == null) return;
 
-        if (!client.isIntegratedServerRunning()) {
+        if (client.isIntegratedServerRunning()) {
             enabled = false;
             sendMessage("AutoSell desactivado: solo funciona en mundo individual.");
             return;
