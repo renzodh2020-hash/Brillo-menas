@@ -22,11 +22,11 @@ public class PaoloAutoSellClient implements ClientModInitializer {
     private static KeyBinding resetKey;
 
     private static boolean enabled = false;
+    private static boolean restMode = false;
 
     private static int sellDelayTicks = 0;
     private static int phaseTicks = 15 * 60 * 20;
     private static int phaseIndex = 0;
-    private static boolean restMode = false;
 
     private static int sellCount = 0;
     private static boolean homeScheduled = false;
@@ -57,7 +57,7 @@ public class PaoloAutoSellClient implements ClientModInitializer {
         refillFractionPool();
         scheduleNextSell();
 
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+        ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
             while (toggleKey.wasPressed()) {
                 enabled = !enabled;
                 sendMessage(enabled ? "AutoSell activado." : "AutoSell pausado.");
@@ -75,6 +75,11 @@ public class PaoloAutoSellClient implements ClientModInitializer {
     private static void tickLoop() {
         if (!enabled) return;
         if (client.player == null || client.world == null) return;
+
+        if (!client.isIntegratedServerRunning()) {
+            enabled = false;
+            sendMessage("AutoSell desactivado: solo funciona en mundo individual.");
+            return;
         }
 
         if (restMode) {
@@ -135,7 +140,7 @@ public class PaoloAutoSellClient implements ClientModInitializer {
         int integerPart = getNextIntegerPart();
         int fractionPart = getNextFractionPart();
 
-        int milliseconds = (integerPart * 1000) + fractionPart;
+        int milliseconds = integerPart * 1000 + fractionPart;
         sellDelayTicks = Math.max(1, milliseconds / 50);
     }
 
@@ -196,10 +201,12 @@ public class PaoloAutoSellClient implements ClientModInitializer {
 
     private static void resetLoop() {
         enabled = false;
+        restMode = false;
+
         sellDelayTicks = 0;
         phaseIndex = 0;
         phaseTicks = 15 * 60 * 20;
-        restMode = false;
+
         sellCount = 0;
         homeScheduled = false;
         homeDelayTicks = 0;
