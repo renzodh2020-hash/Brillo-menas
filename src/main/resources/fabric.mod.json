@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "paolo_autosell",
+  "version": "1.0.0",
+  "name": "Paolo AutoSell",
+  "description": "AutoSell para mundo individual en Fabric 1.20.4.",
+  "authors": [
+    "Paolo"
+  ],
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.paolo.autosell.PaoloAutoSellClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "1.20.4",
+    "fabric-api": "*"
+  }
+}
