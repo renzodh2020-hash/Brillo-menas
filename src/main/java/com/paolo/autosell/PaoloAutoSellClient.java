@@ -75,12 +75,6 @@ public class PaoloAutoSellClient implements ClientModInitializer {
     private static void tickLoop() {
         if (!enabled) return;
         if (client.player == null || client.world == null) return;
-
-        // Seguridad: solo en mundo individual/integrado.
-        if (!client.isIntegratedServerRunning()) {
-            enabled = false;
-            sendMessage("AutoSell se desactivó: solo funciona en mundo individual.");
-            return;
         }
 
         if (restMode) {
