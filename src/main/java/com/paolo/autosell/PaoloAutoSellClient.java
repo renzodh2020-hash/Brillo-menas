@@ -19,10 +19,12 @@ public class PaoloAutoSellClient implements ClientModInitializer {
     private static final Random random = new Random();
 
     private static KeyBinding toggleKey;
-    private static KeyBinding resetKey;
+    private static KeyBinding mineKey;
 
     private static boolean enabled = false;
     private static boolean restMode = false;
+
+    private static boolean autoMineEnabled = false;
 
     private static int sellDelayTicks = 0;
     private static int phaseTicks = 15 * 60 * 20;
@@ -46,8 +48,8 @@ public class PaoloAutoSellClient implements ClientModInitializer {
                 "category.paolo_autosell"
         ));
 
-        resetKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.paolo_autosell.reset",
+        mineKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.paolo_autosell.automine",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_P,
                 "category.paolo_autosell"
@@ -63,20 +65,26 @@ public class PaoloAutoSellClient implements ClientModInitializer {
                 sendMessage(enabled ? "AutoSell activado." : "AutoSell pausado.");
             }
 
-            while (resetKey.wasPressed()) {
-                resetLoop();
-                sendMessage("AutoSell reiniciado.");
+            while (mineKey.wasPressed()) {
+                autoMineEnabled = !autoMineEnabled;
+
+                if (!autoMineEnabled) {
+                    releaseMiningKeys();
+                }
+
+                sendMessage(autoMineEnabled ? "AutoMine activado." : "AutoMine pausado.");
             }
 
-            tickLoop();
+            tickAutoSell();
+            tickAutoMine();
         });
     }
 
-    private static void tickLoop() {
+    private static void tickAutoSell() {
         if (!enabled) return;
         if (client.player == null || client.world == null) return;
 
-        if (client.isIntegratedServerRunning()) {
+        if (!client.isIntegratedServerRunning()) {
             enabled = false;
             sendMessage("AutoSell desactivado: solo funciona en mundo individual.");
             return;
@@ -89,7 +97,7 @@ public class PaoloAutoSellClient implements ClientModInitializer {
                 restMode = false;
                 phaseTicks = ACTIVE_PHASES_MINUTES[phaseIndex] * 60 * 20;
                 scheduleNextSell();
-                sendMessage("Pausa terminada. AutoSell continúa.");
+                sendMessage("Pausa terminada. AutoSell continua.");
             }
 
             return;
@@ -130,6 +138,32 @@ public class PaoloAutoSellClient implements ClientModInitializer {
         }
     }
 
+    private static void tickAutoMine() {
+        if (!autoMineEnabled) return;
+
+        if (client.player == null || client.world == null) {
+            releaseMiningKeys();
+            return;
+        }
+
+        if (!client.isIntegratedServerRunning()) {
+            autoMineEnabled = false;
+            releaseMiningKeys();
+            sendMessage("AutoMine desactivado: solo funciona en mundo individual.");
+            return;
+        }
+
+        client.options.attackKey.setPressed(true);
+        client.options.sneakKey.setPressed(true);
+    }
+
+    private static void releaseMiningKeys() {
+        if (client.options != null) {
+            client.options.attackKey.setPressed(false);
+            client.options.sneakKey.setPressed(false);
+        }
+    }
+
     private static void runCommand(String command) {
         if (client.player != null && client.player.networkHandler != null) {
             client.player.networkHandler.sendChatCommand(command);
@@ -161,7 +195,7 @@ public class PaoloAutoSellClient implements ClientModInitializer {
             phaseIndex = 0;
         }
 
-        sendMessage("AutoSell en pausa automática.");
+        sendMessage("AutoSell en pausa automatica.");
     }
 
     private static int getNextIntegerPart() {
@@ -197,23 +231,6 @@ public class PaoloAutoSellClient implements ClientModInitializer {
         }
 
         Collections.shuffle(fractionPool);
-    }
-
-    private static void resetLoop() {
-        enabled = false;
-        restMode = false;
-
-        sellDelayTicks = 0;
-        phaseIndex = 0;
-        phaseTicks = 15 * 60 * 20;
-
-        sellCount = 0;
-        homeScheduled = false;
-        homeDelayTicks = 0;
-
-        refillIntegerPool();
-        refillFractionPool();
-        scheduleNextSell();
     }
 
     private static void sendMessage(String message) {
