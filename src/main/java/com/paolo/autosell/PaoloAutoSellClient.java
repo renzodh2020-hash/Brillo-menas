@@ -84,7 +84,7 @@ public class PaoloAutoSellClient implements ClientModInitializer {
         if (!enabled) return;
         if (client.player == null || client.world == null) return;
 
-        if (!client.isIntegratedServerRunning()) {
+        if (client.isIntegratedServerRunning()) {
             enabled = false;
             sendMessage("AutoSell desactivado: solo funciona en mundo individual.");
             return;
@@ -146,7 +146,7 @@ public class PaoloAutoSellClient implements ClientModInitializer {
             return;
         }
 
-        if (!client.isIntegratedServerRunning()) {
+        if (client.isIntegratedServerRunning()) {
             autoMineEnabled = false;
             releaseMiningKeys();
             sendMessage("AutoMine desactivado: solo funciona en mundo individual.");
